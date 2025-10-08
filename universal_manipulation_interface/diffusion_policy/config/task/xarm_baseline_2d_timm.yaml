@@ -1,0 +1,99 @@
+camera_obs_latency: 0.125
+robot_obs_latency: 0.0001
+gripper_obs_latency: 0.02
+dataset_frequeny: 0 #59.94
+obs_down_sample_steps: 1 # 3, 1
+
+low_dim_obs_horizon: 2
+img_obs_horizon: 2
+action_horizon: 16
+ignore_proprioception: False
+
+shape_meta: &shape_meta
+  # acceptable types: rgb, low_dim
+  # obs:
+    # camera0_rgb:
+    #   shape: [3, 224, 224]
+    #   horizon: ${task.img_obs_horizon} # int
+    #   latency_steps: 0 # float
+    #   down_sample_steps: ${task.obs_down_sample_steps} # int
+    #   type: rgb
+    #   ignore_by_policy: False
+    # robot0_eef_pos:
+    #   shape: [3]
+    #   horizon: ${task.low_dim_obs_horizon} # int
+    #   latency_steps: ${eval:'(${task.camera_obs_latency} - ${task.robot_obs_latency}) * ${task.dataset_frequeny}'} # float
+    #   down_sample_steps: ${task.obs_down_sample_steps} # float
+    #   type: low_dim
+    #   ignore_by_policy: ${task.ignore_proprioception}
+
+  obs:
+    # rs_side_rgb:
+    #   shape: [3, 160, 220]       # (C,H,W) after your resize script
+    #   type: rgb
+    # rs_front_rgb:
+    #   shape: [3, 224, 224]       # (C,H,W) after your resize script
+    #   type: rgb
+    #   horizon: ${task.img_obs_horizon}
+    #   down_sample_steps: 1
+    rs_wrist_rgb:
+      shape: [3, 224, 224]       # (C,H,W) after your resize script
+      type: rgb
+      horizon: ${task.img_obs_horizon}
+      down_sample_steps: 1
+    # zed_rgb:
+    #   shape: [3, 160, 220]       # (C,H,W) after your resize script
+    #   type: rgb
+    pose:
+      shape: [10]                 # x y z 6d_pose gripper
+      type: low_dim
+      horizon: ${task.low_dim_obs_horizon}
+      down_sample_steps: 1
+  action:
+    shape: [10]
+    horizon: ${task.action_horizon}
+    down_sample_steps: 1
+  # action: 
+  #   shape: [10]
+  #   horizon: ${task.action_horizon}
+  #   latency_steps: 0 # float
+  #   down_sample_steps: ${task.obs_down_sample_steps} # int
+  #   rotation_rep: rotation_6d
+
+name:           xarm_baseline_2d_timm       # shows up in log dirs
+task_name:      xarm_baseline_2d_timm
+# dataset_path: /sailhome/swann/documents/dt_ag_old/dataset/2d_strawberry_baseline/4_cam_baseline_zarr_side_wrist_front_no_crop_timm
+dataset_path: /sailhome/swann/documents/dt_ag/dt_ag/data/2d_strawberry_dt/dt_blackberry_7-22_zarr_for_cluster
+pose_repr: &pose_repr
+  obs_pose_repr: absolute # abs or rel
+  action_pose_repr: absolute # abs or rel or delta
+
+env_runner:
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+
+dataset:
+  _target_: diffusion_policy.dataset.xarm_2d_dataset.XArmImageDataset2D
+  shape_meta: *shape_meta
+  zarr_path: ${task.dataset_path}
+  # cache_dir: null
+  # pose_repr: *pose_repr
+  # action_padding: False
+  # temporally_independent_normalization: False
+  # repeat_frame_prob: 0.0
+  # max_duration: null
+  seed: 42
+  val_ratio: 0.05
+  horizon: 16
+  preload: true
+
+# dataset:
+#   _target_: diffusion_policy.dataset.xarm_2d_dataset.XArmImageDataset2D
+#   zarr_path: /sailhome/swann/documents/dt_ag/dataset/2d_strawberry_baseline/4_cam_baseline_zarr_side_wrist_front_no_crop
+#   shape_meta: ${shape_meta}
+#   horizon: 16                 # obs window
+#   pad_before: 1                 # change to match matts code
+#   pad_after: 7
+#   seed: 42
+#   val_ratio: 0.1
+#   max_train_episodes: null
+#   preload: true       

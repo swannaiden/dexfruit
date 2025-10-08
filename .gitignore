@@ -1,0 +1,12 @@
+universal_manipulation_interface/runs/*
+dt_ag/models/*
+dt_ag/data/*
+dt_ag/dt_ag/models/*
+dt_ag/dt_ag/data/*
+dt_ag/experiments/*dt_ag/data/*
+dt_ag/experiments/*
+dt_ag/post_processing/first_frame_visualization.png
+*.out
+*.pyc
+*.ckpt
+*.hdf5

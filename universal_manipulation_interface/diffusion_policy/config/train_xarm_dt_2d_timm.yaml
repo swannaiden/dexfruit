@@ -1,0 +1,166 @@
+defaults:
+  - _self_
+  - task: xarm_dt_2d_timm
+
+name: train_diffusion_unet_dt_timm
+_target_: diffusion_policy.workspace.train_diffusion_unet_image_workspace.TrainDiffusionUnetImageWorkspace
+
+task_name: ${task.name}
+shape_meta: ${task.shape_meta}
+exp_name: "default"
+
+n_action_steps: 8
+
+policy:
+  _target_: diffusion_policy.policy.diffusion_unet_dual_timm_policy.DiffusionUnetDualTimmPolicy
+  shape_meta: ${shape_meta}
+
+  noise_scheduler:
+    _target_: diffusers.DDIMScheduler
+    num_train_timesteps: 50
+    beta_start: 0.0001
+    beta_end: 0.02
+    beta_schedule: squaredcos_cap_v2
+    clip_sample: True
+    set_alpha_to_one: True
+    steps_offset: 0
+    prediction_type: epsilon
+
+  image_obs_encoder:
+    _target_: diffusion_policy.model.vision.timm_obs_encoder.TimmObsEncoder
+    shape_meta: ${task.image_shape_meta}
+    model_name: 'resnet34.a1_in1k'
+    pretrained: False
+    frozen: False
+    global_pool: ''
+    feature_aggregation: 'attention_pool_2d'
+    position_encording: 'sinusoidal'
+    downsample_ratio: 32
+    transforms:
+      - type: RandomCrop
+        ratio: 0.95
+      - _target_: torchvision.transforms.RandomRotation
+        degrees: [-5.0, 5.0]
+        expand: false
+      - _target_: torchvision.transforms.ColorJitter
+        brightness: 0.3
+        contrast: 0.4
+        saturation: 0.5
+        hue: 0.08
+    use_group_norm: True
+    share_rgb_model: False
+    imagenet_norm: True
+
+  tactile_obs_encoder:
+    _target_: diffusion_policy.model.vision.tactile_obs_encoder.TactileObsEncoder
+    shape_meta: ${task.tactile_shape_meta}
+    model_name: 'resnet18.a1_in1k'
+    pretrained: False
+    frozen: False
+    global_pool: ''
+    feature_aggregation: 'attention_pool_2d'
+    position_encording: 'sinusoidal'
+    downsample_ratio: 32
+    transforms:
+      - type: RandomCrop
+        ratio: 0.95
+      - _target_: torchvision.transforms.RandomRotation
+        degrees: [-5.0, 5.0]
+        expand: false
+      # - _target_: torchvision.transforms.ColorJitter
+      #   brightness: 0.3
+      #   contrast: 0.4
+      #   saturation: 0.5
+      #   hue: 0.08
+    use_group_norm: True
+    share_rgb_model: True
+    imagenet_norm: True
+
+  num_inference_steps: 16
+  obs_as_global_cond: True
+  diffusion_step_embed_dim: 128
+  down_dims: [256,512,1024]
+  kernel_size: 5
+  n_groups: 8
+  cond_predict_scale: True
+  input_pertub: 0.1
+  train_diffusion_n_samples: 1
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+dataloader:
+  batch_size: 128
+  num_workers: 4
+  shuffle: True
+  pin_memory: True
+  persistent_workers: True
+
+val_dataloader:
+  batch_size: 128
+  num_workers: 4
+  shuffle: False
+  pin_memory: True
+  persistent_workers: True
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 3.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+training:
+  device: "cuda:0"
+  seed: 42
+  debug: False
+  resume: False
+  lr_scheduler: cosine
+  lr_warmup_steps: 2000
+  num_epochs: 1001
+  gradient_accumulate_every: 1
+  use_ema: True
+  freeze_encoder: False
+  rollout_every: 999999
+  checkpoint_every: 100
+  val_every: 20
+  sample_every: 5
+  max_train_steps: null
+  max_val_steps: null
+  tqdm_interval_sec: 1.0
+
+logging:
+  project: xarm_dp2d
+  resume: False
+  mode: online
+  name: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+  tags: ["${name}", "${task_name}", "${exp_name}"]
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 21
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.3f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False
+
+multi_run:
+  run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+
+hydra:
+  job:
+    override_dirname: ${name}
+  run:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+  sweep:
+    dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
+    subdir: ${hydra.job.num}

@@ -1,0 +1,85 @@
+camera_obs_latency: 0.125
+robot_obs_latency: 0.0001
+gripper_obs_latency: 0.02
+dataset_frequeny: 0
+obs_down_sample_steps: 1
+
+low_dim_obs_horizon: 2
+img_obs_horizon: 2
+action_horizon: 16
+ignore_proprioception: False
+
+# shape meta for full observation space
+shape_meta: &shape_meta
+  obs:
+    # rs_front_rgb:
+    #   shape: [3, 224, 224]
+    #   type: rgb
+    #   horizon: ${task.img_obs_horizon}
+    #   down_sample_steps: 1
+    rs_wrist_rgb: &rs_wrist_rgb_shape
+      shape: [3, 224, 224]
+      type: rgb
+      horizon: ${task.img_obs_horizon}
+      down_sample_steps: 1
+    dt_left_diff: &dt_left_diff_shape
+      shape: [3, 224, 224]
+      type: rgb
+      horizon: ${task.img_obs_horizon}
+      down_sample_steps: 1
+    dt_right_diff: &dt_right_diff_shape
+      shape: [3, 224, 224]
+      type: rgb
+      horizon: ${task.img_obs_horizon}
+      down_sample_steps: 1
+    pose: &pose_shape
+      shape: [10]
+      type: low_dim
+      horizon: ${task.low_dim_obs_horizon}
+      down_sample_steps: 1
+  action: &action_shape
+    shape: [10]
+    horizon: ${task.action_horizon}
+    down_sample_steps: 1
+
+# subset used for the RGB camera encoder
+image_shape_meta: &image_shape_meta
+  obs:
+    rs_wrist_rgb: *rs_wrist_rgb_shape
+    pose: *pose_shape
+  action: *action_shape
+
+# subset used for the tactile encoder
+tactile_shape_meta: &tactile_shape_meta
+  obs:
+    dt_left_diff: *dt_left_diff_shape
+    dt_right_diff: *dt_right_diff_shape
+  action: *action_shape
+
+name:           xarm_dt_2d_timm
+task_name:      xarm_dt_2d_timm
+dataset_path: /sailhome/swann/documents/dt_ag/dt_ag/data/2d_strawberry_dt/dt_blackberry_7-22_zarr_for_cluster
+pose_repr: &pose_repr
+  obs_pose_repr: absolute
+  action_pose_repr: absolute
+
+env_runner:
+  _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner
+
+dataset:
+  _target_: diffusion_policy.dataset.xarm_2d_dataset.XArmImageDataset2D
+  shape_meta: *shape_meta
+  zarr_path: ${task.dataset_path}
+  seed: 42
+  val_ratio: 0.05
+  horizon: 16
+  preload: true
+  # Vision blackout ablation settings
+  vision_blackout_enabled: true  # Set to true to enable the ablation
+  vision_blackout_gripper_threshold: 0.1  # Gripper value threshold for blackout
+  vision_blackout_keys: ["rs_wrist_rgb"]  # Which vision keys to black out
+  # Tactile-based vision blackout settings
+  vision_blackout_use_tactile: true  # Set to true to use tactile-based blackout instead of gripper
+  vision_blackout_tactile_metric: "energy"  # Metric: 'energy', 'mean', 'std', 'max', 'percentile_95'
+  vision_blackout_tactile_threshold: 500  # Tactile activity threshold for blackout
+  vision_blackout_tactile_keys: ["dt_left_diff", "dt_right_diff"]  # Tactile keys to monitor
