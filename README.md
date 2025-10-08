@@ -67,9 +67,8 @@ We integrate **optical tactile sensing** (DenseTact sensors) with **diffusion po
 ### Prerequisites
 
 - Python 3.10+
-- CUDA 11.8+ (for GPU acceleration)
+- CUDA 11.8+ 
 - ROS2 Humble
-- xArm7 robot (optional, for hardware experiments)
 
 ### Setup
 
