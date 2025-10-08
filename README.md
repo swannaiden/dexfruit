@@ -28,7 +28,7 @@ Stanford University
 
 ## 📋 Overview
 
-**DexFruit** enables robots to handle delicate fruits 🍓🍅🫐 with the same care as humans! We combine:
+**DexFruit** enables robots to handle delicate fruits 🍓🍅🫐 like strawberries tomatoes and blackberries, We combine:
 
 - 🤖 **Tactile-aware diffusion policies** for gentle manipulation
 - 🎯 **FruitSplat** - a novel 3D Gaussian Splatting method for damage inspection
