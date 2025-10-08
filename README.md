@@ -181,8 +181,8 @@ If you find DexFruit useful in your research, please cite our paper:
 ## 🔗 Links
 
 - 🌐 **Website**: [https://dex-fruit.github.io/](https://dex-fruit.github.io/)
-- 📄 **Paper**: [Available on arXiv](https://dex-fruit.github.io/)
-- 🎬 **Videos**: [Supplementary videos](https://dex-fruit.github.io/)
+- 📄 **Paper**: [Available on arXiv](http://arxiv.org/abs/2508.07118)
+- 🎬 **Videos**: [Supplementary videos](https://www.youtube.com/watch?v=uOivql8unq0)
 - 📧 **Contact**: {swann, aqiu34}@stanford.edu
 
 ---
