@@ -58,7 +58,7 @@ We integrate **optical tactile sensing** (DenseTact sensors) with **diffusion po
 **FruitSplat** uses 3D Gaussian Splatting to create high-resolution 3D models of fruit, enabling:
 - Photorealistic 3D reconstruction from webcam videos
 - Automated bruise detection and segmentation
-- Quantitative damage metrics (% bruised surface area)
+- Quantitative damage metrics
 
 ---
 
@@ -94,10 +94,10 @@ pip install opencv-python rich tqdm natsort h5py zarr
 ### Hardware Requirements (Optional)
 
 For running on real hardware:
-- xArm7 robotic arm
-- 2x DenseTact optical tactile sensors
-- Intel RealSense D435i camera
-- 3DConnexion SpaceMouse (for teleoperation)
+- [xArm7](https://www.ufactory.us/product/ufactory-xarm-7) robotic arm
+- 2x [DenseTact](https://techfinder.stanford.edu/technology/densetact-optical-tactile-sensor) optical tactile sensors
+- Intel [RealSense](https://www.intel.com/content/www/us/en/architecture-and-technology/realsense-overview.html) D435i camera
+- 3DConnexion [SpaceMouse](https://3dconnexion.com/us/spacemouse/) (for teleoperation)
 
 ---
 
